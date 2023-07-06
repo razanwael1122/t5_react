@@ -70,8 +70,6 @@ const MergeImages = () => {
       );
       return updatedImages;
     });
-    setSelectedImage(null);
-    setSelectedImageIndex(null);
   };
 
   const mergeImages = async () => {
@@ -79,13 +77,11 @@ const MergeImages = () => {
       alert("Please capture 10 images first!");
       return;
     }
-
     try {
       const mergedImage = await merge(images);
       saveMergedImage(mergedImage);
     } catch (error) {
       alert(`Error merging images: ${error.message}`);
-      console.log("Merge Error:", error);
     }
   };
 
@@ -199,7 +195,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     maxHeight: 200,
   },
-
   contentContainer: {
     alignItems: "center",
   },
@@ -225,20 +220,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
   },
-
   imageWrapper: {
     width: "50%",
     flex: 1,
     alignItems: "center",
   },
-
   image: {
     width: 200,
     height: 200,
     borderRadius: 1,
     margin: 1,
   },
-
   deleteButton: {
     position: "absolute",
     top: 25,
