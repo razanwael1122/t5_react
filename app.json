@@ -9,7 +9,14 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#ffffff",
+      "resolutions": {
+        "@expo/cli": "xxx" 
+      },
+      "scripts": { 
+    "start": "expo start"
+                }
+
     },
     "assetBundlePatterns": [
       "**/*"
@@ -21,10 +28,18 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "CAMERA",
+        "MEDIA_LIBRARY",
+        "EXTERNAL_STORAGE"
+      ]
+      
     },
     "web": {
       "favicon": "./assets/favicon.png"
     }
+
+    
   }
 }
