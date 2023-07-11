@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, createRef } from "react";
 import {
   View,
   Image,
@@ -13,17 +13,22 @@ import * as MediaLibrary from "expo-media-library";
 import { ImageManipulator } from "expo-image-manipulator";
 import { captureRef } from "react-native-view-shot";
 
-const MergeImages = () => {
-  const [images, setImages] = useState([]);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(null);
-  const mergeRef = useRef(null);
+class MergeImages extends React.Component {
+  constructor(props) {
+    super(props);
+    this.mergeRef = createRef();
+    this.state = {
+      images: [],
+      selectedImage: null,
+      selectedImageIndex: null,
+    };
+  }
 
-  useEffect(() => {
-    getCameraRollPermissions();
-  }, []);
+  componentDidMount() {
+    this.getCameraRollPermissions();
+  }
 
-  const getCameraRollPermissions = async () => {
+  getCameraRollPermissions = async () => {
     if (Platform.OS !== "web") {
       const { status: cameraStatus } =
         await ImagePicker.requestCameraPermissionsAsync();
@@ -37,8 +42,8 @@ const MergeImages = () => {
       }
     }
   };
-
-  const openCamera = async () => {
+  //////////////////////////////////////////////////////
+  openCamera = async () => {
     let result;
     try {
       result = await ImagePicker.launchCameraAsync({
@@ -57,35 +62,35 @@ const MergeImages = () => {
       const { assets } = result;
       if (assets && assets.length > 0) {
         const imageUri = assets[0].uri;
-        setImages((prevImages) => [...prevImages, imageUri]);
-        saveImageToGallery(imageUri); // Save the image immediately
+        this.setState((prevState) => ({
+          images: [...prevState.images, imageUri],
+        }));
+        this.saveImageToGallery(imageUri);
       }
     }
   };
-
-  const deleteImage = () => {
-    setImages((prevImages) => {
-      const updatedImages = prevImages.filter(
+  //////////////////////////////////////////////////////////
+  deleteImage = () => {
+    const { selectedImageIndex } = this.state;
+    this.setState((prevState) => {
+      const updatedImages = prevState.images.filter(
         (_, index) => index !== selectedImageIndex
       );
-      return updatedImages;
+      return {
+        images: updatedImages,
+        selectedImage: null,
+        selectedImageIndex: null,
+      };
     });
   };
-
-  const mergeImages = async () => {
-    if (images.length < 10) {
-      alert("Please capture 10 images first!");
+  ////////////////////////////////////////////////////////
+  mergeImages = async () => {
+    const { images } = this.state;
+    if (images.length < 4) {
+      alert("Please capture 4 images first!");
       return;
     }
-    try {
-      const mergedImage = await merge(images);
-      saveMergedImage(mergedImage);
-    } catch (error) {
-      alert(`Error merging images: ${error.message}`);
-    }
-  };
 
-  const merge = async (images) => {
     try {
       const image1 = { uri: images[0] };
       const image2 = { uri: images[1] };
@@ -97,14 +102,17 @@ const MergeImages = () => {
       );
 
       return mergedImage.uri;
-    } catch (error) {
-      // throw new Error("Error merging images. Please try again.");
-    }
+    } catch (error) {}
   };
-
-  const saveMergedImage = async (image) => {
+  /////////////////////////////////////////////////////////////
+  saveMergedImage = async (image) => {
     try {
-      const uri = await captureRef(mergeRef, {
+      const mergedRef = this.mergeRef.current;
+      await new Promise((resolve) => {
+        setTimeout(resolve, 40);
+      });
+
+      const uri = await captureRef(mergedRef, {
         format: "png",
         quality: 1,
       });
@@ -112,77 +120,75 @@ const MergeImages = () => {
       const asset = await MediaLibrary.createAssetAsync(uri);
       await MediaLibrary.saveToLibraryAsync(asset);
       alert("Images merged and saved successfully!");
-      console.log("Merged image URI:", asset.uri);
-    } catch (error) {
-      //alert("Error saving merged image. Please try again.");
-      console.log(error);
-    }
+    } catch (error) {}
   };
-
-  const saveImageToGallery = async (imageUri) => {
+  //////////////////////////////////////////////////////////
+  saveImageToGallery = async (imageUri) => {
     try {
       const asset = await MediaLibrary.createAssetAsync(imageUri);
       await MediaLibrary.saveToLibraryAsync(asset);
-      console.log("Saved image URI:", asset.uri);
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   };
-
-  const openImage = (imageUri, index) => {
-    setSelectedImage(imageUri);
-    setSelectedImageIndex(index);
+  ///////////////////////////////////////////////////////////////
+  openImage = (imageUri, index) => {
+    this.setState({
+      selectedImage: imageUri,
+      selectedImageIndex: index,
+    });
   };
+  //////////////////////////////////////////////
+  render() {
+    const { images, selectedImage } = this.state;
 
-  return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.cameraButton} onPress={openCamera}>
-        <Text style={styles.buttonText}>Capture Image</Text>
-      </TouchableOpacity>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
-        horizontal={true}
-      >
-        <View style={styles.imageContainer} ref={mergeRef}>
-          {images.map((image, index) => (
-            <View key={index} style={styles.imageWrapper}>
-              <TouchableOpacity onPress={() => openImage(image, index)}>
-                <Image
-                  source={{ uri: image }}
-                  style={styles.image}
-                  resizeMode="cover"
-                />
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-      </ScrollView>
-      <TouchableOpacity style={styles.mergeButton} onPress={mergeImages}>
-        <Text style={styles.buttonText}>Merge Images</Text>
-      </TouchableOpacity>
-      {selectedImage && (
-        <View style={styles.modal}>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setSelectedImage(null)}
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.deleteButton} onPress={deleteImage}>
-            <Text style={styles.deleteButtonText}>Delete</Text>
-          </TouchableOpacity>
-          <Image
-            source={{ uri: selectedImage }}
-            style={styles.selectedImage}
-            resizeMode="contain"
-          />
-        </View>
-      )}
-    </View>
-  );
-};
-
+    return (
+      <View style={styles.container}>
+        <TouchableOpacity style={styles.cameraButton} onPress={this.openCamera}>
+          <Text style={styles.buttonText}>Capture Image</Text>
+        </TouchableOpacity>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.contentContainer}
+          horizontal={true}
+        >
+            {images.map((image, index) => (
+              <View key={index} style={styles.imageWrapper}>
+                <TouchableOpacity onPress={() => this.openImage(image, index)}>
+                  <Image
+                    source={{ uri: image }}
+                    style={styles.image}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
+              </View>
+        </ScrollView>
+        <TouchableOpacity style={styles.mergeButton} onPress={this.mergeImages}>
+          <Text style={styles.buttonText}>Merge Images</Text>
+        </TouchableOpacity>
+        {selectedImage && (
+          <View style={styles.modal}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => this.setState({ selectedImage: null })}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={this.deleteImage}
+            >
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
+            <Image
+              source={{ uri: selectedImage }}
+              style={styles.selectedImage}
+              resizeMode="contain"
+            />
+          </View>
+        )}
+      </View>
+    );
+  }
+}
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -191,7 +197,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   scrollView: {
-    flexDirection: "row",
     marginVertical: 10,
     maxHeight: 200,
   },
@@ -210,22 +215,12 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginVertical: 10,
-    top: 100,
   },
   buttonText: {
     color: "white",
     fontWeight: "bold",
   },
-  imageContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
   imageWrapper: {
-    width: "50%",
-    flex: 1,
-    alignItems: "center",
-  },
-  image: {
     width: 200,
     height: 200,
     borderRadius: 1,
