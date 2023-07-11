@@ -96,13 +96,10 @@ class MergeImages extends React.Component {
     }
 
     try {
-      const mergedImage = await this.merge(images); // Merge all captured images
+      const mergedImage = await this.merge(images);
       await this.saveMergedImage(mergedImage);
       alert("Images merged and saved successfully!");
-    } catch (error) {
-      // Handle error
-      //console.log("Error merging images:", error);
-    }
+    } catch (error) {}
   };
 
   merge = async (images) => {
@@ -148,10 +145,7 @@ class MergeImages extends React.Component {
 
       const mergedImage = canvas.toDataURL("image/png");
       return mergedImage;
-    } catch (error) {
-      // Handle error
-      // console.log("Error merging images:", error);
-    }
+    } catch (error) {}
   };
 
   mergeHorizontally = async (images) => {
@@ -163,10 +157,7 @@ class MergeImages extends React.Component {
       );
 
       return mergedImage.uri;
-    } catch (error) {
-      // console.log("Error merging images horizontally:", error);
-      // throw error;
-    }
+    } catch (error) {}
   };
 
   mergeVertically = async (image1, image2) => {
@@ -178,10 +169,7 @@ class MergeImages extends React.Component {
       );
 
       return mergedImage.uri;
-    } catch (error) {
-      // console.log("Error merging images vertically:", error);
-      //throw error;
-    }
+    } catch (error) {}
   };
 
   saveMergedImage = async (image) => {
@@ -199,10 +187,7 @@ class MergeImages extends React.Component {
       const asset = await MediaLibrary.createAssetAsync(uri);
       await MediaLibrary.saveToLibraryAsync(asset);
       alert("Images merged and saved successfully!");
-    } catch (error) {
-      //console.log("Error saving merged image:", error);
-      //throw error;
-    }
+    } catch (error) {}
   };
 
   saveImageToGallery = async (imageUri) => {
@@ -210,9 +195,7 @@ class MergeImages extends React.Component {
       const asset = await MediaLibrary.createAssetAsync(imageUri);
       await MediaLibrary.saveToLibraryAsync(asset);
       console.log("Saved image URI:", asset.uri);
-    } catch (error) {
-      //console.log("Error saving image to gallery:", error);
-    }
+    } catch (error) {}
   };
 
   openImage = (imageUri, index) => {
